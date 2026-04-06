@@ -58,6 +58,6 @@ app.post('/api/chat', async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`后端已启动：http://localhost:${PORT}`);
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`后端已启动: http://localhost:${PORT}`);
 });
