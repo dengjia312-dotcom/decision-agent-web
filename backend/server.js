@@ -2,20 +2,18 @@ require('dotenv').config();
 
 const express = require('express');
 const axios = require('axios');
-const path = require('path');
+const cors = require('cors');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const DIFY_API_KEY = process.env.DIFY_API_KEY;
 const DIFY_API_URL = 'https://api.dify.ai/v1/chat-messages';
 
-// 解析 JSON 请求体
+// 允许所有来源跨域（前端部署到 Vercel 后能正常请求）
+app.use(cors());
 app.use(express.json());
 
-// 托管前端静态文件
-app.use(express.static(path.join(__dirname, 'public')));
-
-// POST /api/chat — 转发请求到 Dify
+// POST /api/chat — 接收前端请求，转发给 Dify
 app.post('/api/chat', async (req, res) => {
   const { query, conversation_id } = req.body;
 
@@ -45,22 +43,21 @@ app.post('/api/chat', async (req, res) => {
       }
     );
 
-    const { answer, conversation_id: newConversationId } = response.data;
+    const { answer, conversation_id: newConversationId, message_id } = response.data;
 
     res.json({
       answer,
       conversation_id: newConversationId,
+      message_id,
     });
   } catch (err) {
-    // 把 Dify 返回的错误信息透传给前端，方便调试
     const status = err.response?.status || 500;
-    const message =
-      err.response?.data?.message || err.message || '调用 Dify API 失败';
+    const message = err.response?.data?.message || err.message || '调用 Dify API 失败';
     console.error('[Dify Error]', status, message);
     res.status(status).json({ error: message });
   }
 });
 
 app.listen(PORT, () => {
-  console.log(`服务已启动：http://localhost:${PORT}`);
+  console.log(`后端已启动：http://localhost:${PORT}`);
 });

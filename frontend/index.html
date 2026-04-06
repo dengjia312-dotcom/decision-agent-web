@@ -4,6 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>帮我做决定</title>
+  <!-- 后端接口地址配置，部署时修改 config.js 即可 -->
+  <script src="config.js"></script>
   <style>
     * {
       box-sizing: border-box;
@@ -182,9 +184,7 @@
       <button id="new-chat-btn">+ 新对话</button>
     </div>
 
-    <div id="chat-box">
-      <!-- 消息动态插入到这里 -->
-    </div>
+    <div id="chat-box"></div>
 
     <div class="input-area">
       <textarea
@@ -197,7 +197,9 @@
   </div>
 
   <script>
-    // 保存当前会话 ID，实现连续对话
+    // 从 config.js 读取后端地址
+    const API_BASE = window.APP_API_BASE_URL || 'http://localhost:3000';
+
     let conversationId = '';
 
     const chatBox = document.getElementById('chat-box');
@@ -205,7 +207,6 @@
     const sendBtn = document.getElementById('send-btn');
     const newChatBtn = document.getElementById('new-chat-btn');
 
-    // 追加一条消息到聊天记录
     function appendMessage(role, text) {
       const div = document.createElement('div');
       div.className = `message ${role}`;
@@ -215,21 +216,18 @@
       return div;
     }
 
-    // 发送消息
     async function sendMessage() {
       const query = userInput.value.trim();
       if (!query) return;
 
-      // 显示用户消息
       appendMessage('user', query);
       userInput.value = '';
       sendBtn.disabled = true;
 
-      // 显示加载占位
       const loadingEl = appendMessage('loading', '正在思考中…');
 
       try {
-        const response = await fetch('/api/chat', {
+        const response = await fetch(`${API_BASE}/api/chat`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -239,8 +237,6 @@
         });
 
         const data = await response.json();
-
-        // 移除加载提示
         loadingEl.remove();
 
         if (!response.ok) {
@@ -248,9 +244,7 @@
           return;
         }
 
-        // 保存 conversation_id 以支持连续对话
         conversationId = data.conversation_id || conversationId;
-
         appendMessage('assistant', data.answer);
       } catch (err) {
         loadingEl.remove();
@@ -262,10 +256,9 @@
       }
     }
 
-    // 点击发送按钮
     sendBtn.addEventListener('click', sendMessage);
 
-    // 按 Ctrl+Enter 发送（Enter 换行）
+    // Ctrl+Enter 发送，Enter 换行
     userInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
         e.preventDefault();
@@ -273,7 +266,6 @@
       }
     });
 
-    // 新对话：清空记录和 conversation_id
     newChatBtn.addEventListener('click', () => {
       conversationId = '';
       chatBox.innerHTML = '';
