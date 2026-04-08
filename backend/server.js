@@ -13,6 +13,16 @@ const DIFY_API_URL = 'https://api.dify.ai/v1/chat-messages';
 app.use(cors());
 app.use(express.json());
 
+// GET / — Railway 存活探测
+app.get('/', (req, res) => {
+  res.json({ status: 'ok' });
+});
+
+// GET /health — 健康检查
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok' });
+});
+
 // POST /api/chat — 接收前端请求，转发给 Dify
 app.post('/api/chat', async (req, res) => {
   const { query, conversation_id } = req.body;
